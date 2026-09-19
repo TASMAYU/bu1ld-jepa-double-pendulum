@@ -1,0 +1,140 @@
+{
+  "contract_version": "1.0.0",
+  "evaluation_grid": "representation (16x16, [0,1])",
+  "results": {
+    "train": {
+      "linear_ar": {
+        "fit_diagnostics": {
+          "context_frames": 8,
+          "n_constant_features": 1486,
+          "n_design_features": 2048,
+          "note": "n_constant_features counts training-split pixels that never light up and therefore have exactly zero variance. These make the unregularised normal equations singular; the ridge term is what makes the solve well posed.",
+          "ridge_lambda": 1.0
+        },
+        "horizon": 8,
+        "mse": 0.0026928509552578573,
+        "mse_over_target_variance": 0.12346107184001302,
+        "n_windows": 2640,
+        "per_horizon_mse": [
+          0.00010901306070837501,
+          0.0005264777561135571,
+          0.0013643237347977007,
+          0.0024322417641627504,
+          0.0033635417193595106,
+          0.00400932227810428,
+          0.004557600618463259,
+          0.005180286710353423
+        ],
+        "rmse": 0.05189268691499658
+      },
+      "persistence": {
+        "horizon": 8,
+        "mse": 0.010441708178146401,
+        "mse_over_target_variance": 0.47872849442242554,
+        "n_windows": 2640,
+        "per_horizon_mse": [
+          0.0009330007338730004,
+          0.0033157423625133162,
+          0.006359633726916637,
+          0.009525415463097093,
+          0.012531673331264589,
+          0.015068616262135145,
+          0.017068220344298245,
+          0.018731363201073197
+        ],
+        "rmse": 0.10218467682654969
+      },
+      "temporal_mean": {
+        "horizon": 8,
+        "mse": 0.014891573908664668,
+        "mse_over_target_variance": 0.6827446846097212,
+        "n_windows": 2640,
+        "per_horizon_mse": [
+          0.007902110974903901,
+          0.010438804301636536,
+          0.0126699993936429,
+          0.014665255477030004,
+          0.01647383077053769,
+          0.01794724097434979,
+          0.019058393013022486,
+          0.019976956364194037
+        ],
+        "rmse": 0.12203103666143572
+      }
+    },
+    "val": {
+      "linear_ar": {
+        "fit_diagnostics": {
+          "context_frames": 8,
+          "n_constant_features": 1486,
+          "n_design_features": 2048,
+          "note": "n_constant_features counts training-split pixels that never light up and therefore have exactly zero variance. These make the unregularised normal equations singular; the ridge term is what makes the solve well posed.",
+          "ridge_lambda": 1.0
+        },
+        "horizon": 8,
+        "mse": 0.02959978507505786,
+        "mse_over_target_variance": 1.3261590917417403,
+        "n_windows": 880,
+        "per_horizon_mse": [
+          0.0043619536601544875,
+          0.010771364752649172,
+          0.01982671996965322,
+          0.028791519759516618,
+          0.03648066589773042,
+          0.04225093640099306,
+          0.04612734747780049,
+          0.048187772681965405
+        ],
+        "rmse": 0.17204588072679294
+      },
+      "persistence": {
+        "horizon": 8,
+        "mse": 0.01791505422985124,
+        "mse_over_target_variance": 0.8026481268603299,
+        "n_windows": 880,
+        "per_horizon_mse": [
+          0.0026490133953760964,
+          0.008400641398019753,
+          0.014394842145339148,
+          0.01895076452381816,
+          0.021979916717875712,
+          0.024057133627113723,
+          0.025807235560896587,
+          0.027080886470370723
+        ],
+        "rmse": 0.13384713007700702
+      },
+      "temporal_mean": {
+        "horizon": 8,
+        "mse": 0.01973970032773948,
+        "mse_over_target_variance": 0.8843977411156236,
+        "n_windows": 880,
+        "per_horizon_mse": [
+          0.012432421898171878,
+          0.015616393599997593,
+          0.01840204932579251,
+          0.020391937010828302,
+          0.02164338075213659,
+          0.022436632217900324,
+          0.023216812282226818,
+          0.02377797553486182
+        ],
+        "rmse": 0.14049804385734158
+      }
+    }
+  },
+  "splits_evaluated": [
+    "train",
+    "val"
+  ],
+  "target_variance_reference": {
+    "train": 0.021811336278915405,
+    "val": 0.022319935262203217
+  },
+  "test_evaluated": false,
+  "windows": {
+    "context_frames": 8,
+    "stride": 4,
+    "target_frames": 8
+  }
+}

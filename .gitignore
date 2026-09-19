@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- project-specific -------------------------------------------------------
+# Generated trajectory data is fully reproducible from experiment_contract.json
+# via `make all`, so it is not tracked. The manifest (with SHA-256 hashes of
+# every generated file) *is* tracked, so regeneration can be verified.
+data/raw/

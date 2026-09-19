@@ -1,0 +1,164 @@
+{
+  "contract_version": "1.0.0",
+  "project": "bu1ld-jepa-double-pendulum",
+  "cohort": "Bu1LD JEPA Cohort 01",
+  "milestone": "M1",
+  "frozen_by": "TASMAYU",
+  "frozen_utc_date": "2026-09-19",
+  "freeze_rule": "This file is frozen by the commit that introduces it. It must not be edited after any validation or test outcome has been observed. Any change to any field below constitutes a new experiment and must be reported as one.",
+
+  "purpose": "Provide a reproducible, deterministically generated video-prediction benchmark on a chaotic system, with an evaluation boundary that is fixed before any learned model is tuned. M1 ships the simulator, the split, the contract, the manifest and the trivial baselines only. No JEPA model is trained in M1.",
+
+  "simulator": {
+    "system": "undamped_planar_double_pendulum",
+    "mass_model": "point masses on rigid massless rods",
+    "integrator": "classical_runge_kutta_4",
+    "dt_s": 0.005,
+    "n_steps": 800,
+    "duration_s": 4.0,
+    "g_m_s2": 9.81,
+    "m1_kg": 1.0,
+    "m2_kg": 1.0,
+    "l1_m": 1.0,
+    "l2_m": 1.0,
+    "damping": 0.0,
+    "angle_convention": "theta1 and theta2 measured from the downward vertical, positive counter-clockwise, radians",
+    "ic_convention": "released from rest; all initial angular velocities are exactly zero in every split",
+    "energy_check": "total mechanical energy must be conserved; per-trajectory drift is recorded in the manifest and must stay below energy_drift_tolerance_rel"
+  },
+
+  "energy_drift_tolerance_rel": 1e-05,
+  "energy_scale_definition": "E_scale = (m1+m2)*g*l1 + m2*g*l2, i.e. the energy difference between the fully inverted configuration and the hanging configuration at rest. Drift is normalised by this fixed physical scale rather than by the trajectory's own |E_initial|, because the test split contains initial conditions near the separatrix where E_initial passes through zero and a self-normalised drift would diverge.",
+  "energy_drift_note": "Measured worst-case drift on the 25 fps frame grid at dt=0.005 over 4 s, relative to E_scale = 29.43 J: train 2.52e-08, val 2.58e-07, test 1.50e-06. The 1e-05 gate therefore retains roughly 7x margin on the most energetic split. Absolute figures are train 7.4e-07 J, val 7.6e-06 J, test 4.4e-05 J.",
+  "integrator_convergence_note": "RK4 at dt=0.005 was checked against a dt=0.0005 reference on the 25 fps frame grid. Max state error is 3.2e-05 rad and shows the expected 4th-order scaling (halving dt cuts error ~16x: 1.07e-03 -> 3.18e-05 -> 8.4e-07 -> 2.1e-08). One rendered pixel subtends about 0.073 rad, so integration error is more than three orders of magnitude below the rendering resolution and does not contribute measurably to any reported metric.",
+
+  "renderer": {
+    "height": 64,
+    "width": 64,
+    "fps": 25,
+    "frame_stride": 8,
+    "n_frames": 100,
+    "view_half_extent_m": 2.3,
+    "rod_radius_px": 1.6,
+    "aa_px": 1.0,
+    "joint_radius_scale": 1.6,
+    "channels": "grayscale",
+    "dtype": "uint8",
+    "notes": "Pure NumPy renderer, no graphics backend, so pixel values are fixed by source code alone and cannot drift with a library version."
+  },
+
+  "representation": {
+    "name": "mean_pool",
+    "mean_pool_factor": 4,
+    "height": 16,
+    "width": 16,
+    "value_range": [0.0, 1.0],
+    "dtype": "float32",
+    "notes": "All baselines and all future models are scored on this grid. Fixing the evaluation resolution keeps trivial baselines computationally trivial and keeps every model comparable."
+  },
+
+  "windows": {
+    "context_frames": 8,
+    "target_frames": 8,
+    "stride": 4,
+    "crosses_trajectory_boundary": false,
+    "notes": "Context = frames [t, t+8). Target = frames [t+8, t+16). Windows never span two trajectories."
+  },
+
+  "splits": {
+    "unit": "trajectory",
+    "disjoint": true,
+    "held_out_axis": "theta1_0_deg",
+    "rationale": "Splits are separated on initial first-rod angle, which orders the trajectories by mechanical energy. Train sees only gentle, low-energy swings. Test starts near the inverted position, a qualitatively different and far more energetic dynamical regime that no training trajectory enters. Splitting at trajectory level (rather than by frame) prevents near-duplicate frames from leaking across the boundary.",
+    "train": {
+      "n": 120,
+      "theta1_0_deg": [10.0, 60.0],
+      "theta2_0_deg": [-10.0, 10.0],
+      "theta1_dot_0": 0.0,
+      "theta2_dot_0": 0.0,
+      "seed": 1001
+    },
+    "val": {
+      "n": 40,
+      "theta1_0_deg": [60.0, 90.0],
+      "theta2_0_deg": [-10.0, 10.0],
+      "theta1_dot_0": 0.0,
+      "theta2_dot_0": 0.0,
+      "seed": 2002
+    },
+    "test": {
+      "n": 40,
+      "theta1_0_deg": [120.0, 170.0],
+      "theta2_0_deg": [-10.0, 10.0],
+      "theta1_dot_0": 0.0,
+      "theta2_dot_0": 0.0,
+      "seed": 3003
+    }
+  },
+
+  "sampling": {
+    "per_trajectory_seed_rule": "split_seed * 1000000 + trajectory_index",
+    "draw_order": [
+      "theta1 magnitude ~ Uniform(theta1_0_deg[0], theta1_0_deg[1])",
+      "theta1 sign ~ Uniform{-1, +1}",
+      "theta2 ~ Uniform(theta2_0_deg[0], theta2_0_deg[1])"
+    ]
+  },
+
+  "baselines": {
+    "family_frozen": true,
+    "persistence": {
+      "enabled": true,
+      "description": "Repeat the final context frame across the whole horizon."
+    },
+    "temporal_mean": {
+      "enabled": true,
+      "description": "Repeat the per-pixel mean of the context frames across the whole horizon."
+    },
+    "linear_ar": {
+      "enabled": true,
+      "description": "Ridge regression from the flattened context window to the next frame, rolled out autoregressively to the full horizon.",
+      "ridge_lambda": 1.0,
+      "closed_form": "W = (X^T X + lambda I)^-1 X^T Y, bias term unpenalised"
+    }
+  },
+
+  "metrics": {
+    "primary": "mse",
+    "reported": [
+      "mse",
+      "rmse",
+      "mse_over_target_variance",
+      "per_horizon_mse"
+    ],
+    "evaluation_grid": "representation (16x16, [0,1])",
+    "mse_definition": "mean of (prediction - target)^2 over window, horizon step and pixel",
+    "mse_over_target_variance_definition": "mse divided by the variance of the ground-truth targets on the same split; 1.0 means no better than always emitting the split mean",
+    "per_horizon_mse_definition": "mse restricted to target step k, for k = 0..7",
+    "aggregation": "mean over all windows of a split"
+  },
+
+  "model_selection_rule": "Any learned model must select its checkpoint using validation-split loss only. The test split is never read during architecture design, hyperparameter choice, checkpoint selection, or baseline construction. No model-selection decision in this project may reference a test-split number.",
+
+  "tuning_budget": {
+    "max_configurations_tried": 12,
+    "max_wall_clock_hours": 8,
+    "budget_applies_to": "the JEPA model in a later milestone; M1 trains no model",
+    "notes": "The budget is capped so that a positive result cannot be manufactured by trying configurations until one happens to look good on validation."
+  },
+
+  "test_policy": {
+    "evaluated_in_m1": false,
+    "gate": "Test evaluation requires the explicit CLI flag --allow-test and emits a warning to stderr.",
+    "statement": "No test trajectory has been rendered for review, inspected, or evaluated. Test data files are generated by the deterministic pipeline because generation is not evaluation, but no test metric has been computed or looked at.",
+    "change_rule": "The split, the metric definitions, the seeds and the baseline family must not be changed to rescue a result after any outcome has been observed."
+  },
+
+  "environment": {
+    "language": "python",
+    "python_version": ">=3.10",
+    "pinned_requirements": "requirements.txt",
+    "reproduction_command": "make all",
+    "determinism_command": "make verify"
+  }
+}
